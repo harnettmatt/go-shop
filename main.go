@@ -1,7 +1,11 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"net/http"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // Item ...
@@ -33,7 +37,33 @@ func main() {
 	http.HandleFunc("/", home)
 	http.HandleFunc("/users", users)
 	http.HandleFunc("/items", items)
+
+	db, dberr := sql.Open("mysql", dbcredentials)
+	checkErr(dberr)
+
+	rows, err := db.Query("SELECT * FROM items")
+	checkErr(err)
+	for rows.Next() {
+		var name string
+		var image string
+		var category string
+		var price float32
+
+		err := rows.Scan(&name, &image, &category, &price)
+		checkErr(err)
+		fmt.Println(name)
+		fmt.Println(image)
+		fmt.Println(category)
+		fmt.Println(price)
+
+	}
 	if err := http.ListenAndServe(":8080", nil); err != nil {
+		panic(err)
+	}
+}
+
+func checkErr(err error) {
+	if err != nil {
 		panic(err)
 	}
 }
